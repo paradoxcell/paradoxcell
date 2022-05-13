@@ -21,7 +21,14 @@ class DataFile():
                     file_path.append('/'.join([path,file]))
         return sorted(file_path)
 
-    def get_df(self,column_sorted=False):
+    def get_df_readcsv(self):
+        df = pd.DataFrame()
+        for file in self.file_path:
+            df_file = pd.read_csv(file,sep='\t')
+            df = pd.concat([df,df_file],ignore_index=True)
+        return df
+
+    def get_df_open(self,column_sorted=False):
         df = pd.DataFrame()
         for file in self.file_path:
             f = open(file,encoding=self.file_encoding)

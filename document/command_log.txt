@@ -1,0 +1,81 @@
+# 누가          : 나의
+# 언제          : 2022 업데이트
+# 어디서        : 리눅스 환경에서
+# 무엇을        : 자주 쓰는 명령어
+# 왜            : 기록하고 다시 리눅스 환경설정 할 때 쓰려고
+
+
+경로
+    데이터 저장 경로 = /10Gdata/sjt/docker_volume
+    conda 설치 경로 = ~/downloads/miniconda3
+
+포트
+    7708
+    7808
+
+alias
+    alias sjt.dind='docker exec -it sjt docker run --rm -it'
+    alias sjt.dind.ls='docker exec -it sjt docker ps -a'
+    alias show.tcp.port='netstat -tlpn | sort -t: -k2 -n'
+ubuntu
+    기본
+        apt-get update --fix-missing
+        apt-get upgrade
+        apt-get install -y sudo vim git wget unzip curl htop locales build-essential software-properties-common
+        passwd
+
+    그룹
+        groupadd conda
+        chgrp -R conda ~/downloads/miniconda3
+        chmod 770 -R ~/downloads/miniconda3
+
+    유저
+        useradd -m -g conda -s /bin/bash sjt
+        ech~/downloads/miniconda3/etc/profile.d/conda.sh" >> /home/sjt/.bashrc
+        echo "conda activate base" >> /home/sjt/.bashrc
+        # newgrp sjr sudo conda docker 그룹 추가
+
+    root
+        usermod -G sudo -a sjt
+        passwd sjt
+
+    conda
+        RUN mkdir -p ~/downloads/miniconda3 && \
+            wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/downloads/miniconda3/miniconda.sh && \
+            /bin/bash ~/downloads/miniconda3/miniconda.sh -b -u -p ~/downloads/miniconda3 && \
+            rm -rf ~/downloads/miniconda3/miniconda.sh && \
+            ln -s ~/downloads/miniconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+            echo ". ~/downloads/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc && \
+            echo "conda activate base" >> ~/.bashrc
+        RUN conda update -n base -c defaults conda --force && \
+            conda update -y --all
+        RUN conda upgrade -n base conda
+        RUN conda config --add channels defaults && \
+            conda config --add channels r && \
+            conda config --add channels bioconda && \
+            conda config --add channels conda-forge
+    
+
+
+    jupyter
+
+
+    docker host
+        sudo docker network create --driver bridge --subnet 192.168.0.0/24 --gateway 192.168.0.1 sjt
+        sudo docker run -d --gpus all --hostname sjt -it --name sjt --network sjt --ip 192.168.0.2 --privileged --restart=always -v /10Gdata/sjt/docker_volume:/docker_volume -p 7708:22 -p 7808:8888 docker:dind
+
+    docker container
+        ncbi
+
+alpine
+    docker dind host
+        apk fix
+        apk upgrade --no-cache --update
+        apk add --no-cache --update bash bash-completion
+        apk add --no-cache --update ca-certificates tzdata
+        apk add --no-cache --update sudo dpkg busybox-extras openssh-client
+        apk add --no-cache --update binutils iputils bridge-utils util-linux net-tools bind-tools
+        apk add --no-cache --update curl wget grep sed rsync socat netcat-openbsd run-parts htop nano vim
+        apk add --no-cache --update tar gzip bzip2 xz zip unzip
+
+kubernetes
